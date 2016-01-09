@@ -41,7 +41,7 @@ def crawl_etf(href, data_dir)
 	page_loaded_text = if href.include?("=BOND") then
 		"Distribution by issuer (% of fund)"
 	else
-		"Top country exposure (% of equities)"
+		"Sector weighting"
 	end
 
 	# Try to ensure everything's loaded by finding an element from the tail end of the page.
