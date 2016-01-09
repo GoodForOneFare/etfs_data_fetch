@@ -1,11 +1,6 @@
-require 'capybara'
-require 'capybara/dsl'
-require 'capybara/selenium/driver'
 require 'fileutils'
 require_relative 'globals'
-
-include Capybara::DSL
-
+require_relative 'capybara_setup'
 
 def va_us_has_separate_holdings?(ticker_code)
 	["BIV", "BLV", "EDV", "VGIT", "VGLT", "VMBS"].include?(ticker_code)
@@ -46,17 +41,7 @@ def wait_for_vanguard_us_holdings_download(ticker_code)
 end
 
 
-# Configure Firefox/Capybara for grabbing
-Capybara.register_driver :selenium do |app|
-  Capybara::Selenium::Driver.new(app, :browser => :chrome) #, :profile =>
-    #Selenium::WebDriver::Firefox::Profile.new.tap { |pr|  pr["focusmanager.testmode"] = true }
-  #)
-end
-
-Capybara.default_driver = :selenium
 Capybara.app_host = "https://advisors.vanguard.com"
-Capybara.default_max_wait_time = 3
-
 visit('/VGApp/iip/site/advisor/investments/aggregateviews?productType=product_etf#vt=performanceQuarterNav&pt=product_etf&ac=assetClass_all&ssc=false&sbm=false&acv=true&merge=functionarray2mergeStrtoAddstartIndvararraynewarraytoreturnskipfalseuseforaddingnewrowind20indexforarray2emptyNotSkiptruethisforEachfunctionitemindexifemptyNotSkipitemskipskipifskiparrayindexitemmergeStrarray2ind2ind2elsearrayindexitemiftoAddindexstartIndskipskipreturnarray&balancedSubAssetClassCategorySelectedCat=none&moneyMktSubAssetClassCategorySelectedCat=none&usBondSubAssetClassCategorySelectedCat=none&usStockSubAssetClassCategorySelectedCat=none&benchmarkMgmtCategorySelectedCat=none&assetClassCategorySelectedCat=assetClass_all&productCategorySelectedCat=product_etf')
 
 find('[rowposition=fundName] a', match: :first, wait: 10)

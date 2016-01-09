@@ -1,10 +1,6 @@
-require 'capybara'
-require 'capybara/dsl'
-require 'capybara/selenium/driver'
 require 'fileutils'
 require_relative 'globals'
-
-include Capybara::DSL
+require_relative 'capybara_setup'
 
 def wait_for_vanguard_ca_holdings_download(ticker_code)
 	File.delete(*Dir.glob("#{$downloads_dir}/*#{ticker_code}*.csv"))
@@ -26,17 +22,7 @@ def wait_for_vanguard_ca_holdings_download(ticker_code)
 	csv_files[0]
 end
 
-# Configure Firefox/Capybara for grabbing
-Capybara.register_driver :selenium do |app|
-  Capybara::Selenium::Driver.new(app, :browser => :chrome) #, :profile =>
-    #Selenium::WebDriver::Firefox::Profile.new.tap { |pr|  pr["focusmanager.testmode"] = true }
-  #)
-end
-
-Capybara.default_driver = :selenium
 Capybara.app_host = "https://www.vanguardcanada.ca"
-Capybara.default_max_wait_time = 3
-
 visit('/individual/portal.htm')
 
 find("h2", text: "Individual investors").click

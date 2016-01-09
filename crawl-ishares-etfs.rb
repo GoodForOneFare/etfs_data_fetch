@@ -7,22 +7,11 @@
 # ```
 # Without adding the above, tests are prone to failing with obscure network timeouts.
 
-require 'capybara'
-require 'capybara/dsl'
-require 'capybara/selenium/driver'
 require 'fileutils'
 require_relative 'globals'
+require_relative 'capybara_setup'
 
-include Capybara::DSL
-
-Capybara.register_driver :selenium do |app|
-  Capybara::Selenium::Driver.new(app, :browser => :chrome)
-end
-
-Capybara.default_driver = :selenium
 Capybara.app_host = "http://www.blackrock.com"
-Capybara.default_max_wait_time = 3
-
 visit('/ca/individual/en/products/product-list#categoryId=1&lvl2=overview')
 find('a.investor-type-0', visible: true).click
 find('.enter-site a.button').click

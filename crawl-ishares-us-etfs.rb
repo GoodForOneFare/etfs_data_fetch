@@ -7,26 +7,12 @@
 # ```
 # Without adding the above, tests are prone to failing with obscure network timeouts.
 
-require 'capybara'
-require 'capybara/dsl'
-require 'capybara/selenium/driver'
 require 'fileutils'
 require_relative 'globals'
-
-include Capybara::DSL
-
-# Configure Firefox/Capybara for grabbing
-Capybara.register_driver :selenium do |app|
-  Capybara::Selenium::Driver.new(app, :browser => :chrome) #, :profile =>
-    #Selenium::WebDriver::Firefox::Profile.new.tap { |pr|  pr["focusmanager.testmode"] = true }
-  #)
-end
-
-Capybara.default_driver = :selenium
-Capybara.app_host = "https://www.ishares.com"
-Capybara.default_max_wait_time = 3
+require_relative 'capybara_setup'
 
 begin
+	Capybara.app_host = "https://www.ishares.com"
 	visit("/us/products/etf-product-list#!type=ishares&tab=overview&view=list")
 
 	find('a', text: "Find an ETF").hover
