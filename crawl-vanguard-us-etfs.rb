@@ -82,7 +82,7 @@ def crawl_etf(href, data_dir)
 
 	ticker_code = find("meta[name=TICKER_SYMBOL]", visible: false)[:content]
 	puts "Ticker #{ticker_code}"
-	# TODO: save page HTML File.write("#{base_dir}/#{fund_name}.html", find('body')[:innerHTML])
+	# TODO: save page HTML File.write("#{data_dir}/#{fund_name}.html", find('body')[:innerHTML])
 
 	wait_for_vanguard_us_holdings_download(ticker_code)
 
@@ -93,19 +93,11 @@ def crawl_etf(href, data_dir)
 		end
 	end
 
-	now = DateTime.now
-	day = now.mday
-	month = { 1.to_s.to_sym => 'Jan', 2.to_s.to_sym => 'Feb', 3.to_s.to_sym => 'Mar', 4.to_s.to_sym => 'Apr', 5.to_s.to_sym => 'May', 6.to_s.to_sym => 'Jun', 7.to_s.to_sym => 'Jul', 8.to_s.to_sym => 'Aug', 9.to_s.to_sym => 'Sep', 10.to_s.to_sym => 'Oct', 11.to_s.to_sym => 'Nov', 12.to_s.to_sym => 'Dec' }[now.month.to_s.to_sym]
-	year = now.year
-
-	base_dir = File.join(data_dir, "#{day}-#{month}-#{year}")
-	FileUtils.mkpath base_dir
-
 	holdings_path = Dir.glob("#{$downloads_dir}/ProductDetailsHoldings_*.csv")[0]
 	holdings_etf_path = "#{$downloads_dir}/#{ticker_code}.csv"
 
 	File.rename holdings_path, holdings_etf_path
-	FileUtils.move holdings_etf_path, base_dir
+	FileUtils.move holdings_etf_path, data_dir
 
 	if va_us_has_separate_holdings?(ticker_code)
 		click_link "Price & Distributions"
@@ -117,13 +109,14 @@ def crawl_etf(href, data_dir)
 	# TODO: save distribution history
 end
 
-data_dir = File.join($data_root_dir, "vanguard/us")
-FileUtils.mkpath(data_dir) unless File.exists?(data_dir)
+dir = data_dir "vanguard", "us", DateTime.now
+FileUtils.mkpath dir
+puts "Saving data to #{dir}."
 
 begin
 	hrefs.each do |href|
 		puts "Crawling #{href}"
-		crawl_etf(href, data_dir)
+		crawl_etf(href, dir)
 	end
 rescue Exception => e
 	puts e.message

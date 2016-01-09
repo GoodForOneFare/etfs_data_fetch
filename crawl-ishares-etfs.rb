@@ -102,26 +102,19 @@ def crawl_fund(href, data_dir)
 		end
 	end
 
-	now = DateTime.now
-	day = now.mday
-	month = { 1.to_s.to_sym => 'Jan', 2.to_s.to_sym => 'Feb', 3.to_s.to_sym => 'Mar', 4.to_s.to_sym => 'Apr', 5.to_s.to_sym => 'May', 6.to_s.to_sym => 'Jun', 7.to_s.to_sym => 'Jul', 8.to_s.to_sym => 'Aug', 9.to_s.to_sym => 'Sep', 10.to_s.to_sym => 'Oct', 11.to_s.to_sym => 'Nov', 12.to_s.to_sym => 'Dec' }[now.month.to_s.to_sym]
-	year = now.year
-
-	base_dir = File.join(data_dir, "#{day}-#{month}-#{year}")
-	FileUtils.mkpath base_dir
-
-	File.write("#{base_dir}/#{ticker_code}.html", find('body')[:innerHTML])
+	File.write("#{data_dir}/#{ticker_code}.html", find('body')[:innerHTML])
 	sleep 2
-	FileUtils.move downloaded_holdings_csv, base_dir
+	FileUtils.move downloaded_holdings_csv, data_dir
 end
 
-data_dir = File.join($data_root_dir, "ishares/ca")
-FileUtils.mkpath(data_dir) unless File.exists?(data_dir)
+dir = data_dir "ishares", "ca", DateTime.now
+FileUtils.mkpath dir
+puts "Saving data to #{dir}."
 
 hrefs.each do |href|
 	begin
 		puts "Crawling #{href}"
-		crawl_fund(href, data_dir)
+		crawl_fund(href, dir)
 	rescue Net::ReadTimeout => e
 		puts "Read timeout #{e}"
 		puts e.backtrace
