@@ -74,17 +74,25 @@ def crawl_fund(href, data_dir)
 #	sleep 3
 
 	fund_name = find('.identifier').text()
+	has_distributions = !["CMDT", "CSG", "IAU", "SLV"].include?(fund_name)
+	has_holdings = !["IAU", "SLV"].include?(fund_name)
+
+	fund_html_file = File.join(data_dir, "#{fund_name}.html")
+	fund_holdings_file = File.join(data_dir, "#{fund_name}.csv")
+
+	if File.exists?(fund_html_file) && (has_holdings && File.exists?(fund_holdings_file))
+		puts "\tAlready downloaded."
+		sleep 2 # Don't overload the servers.
+		return
+	end
 
 	Capybara.current_session.execute_script(%q(
 		$('body').append("<style type='text/css'>.sticky-wrapper, .sticky-footer { position: static !important }</style>")
 	))
 
-	has_distributions = !["CMDT", "CSG", "IAU", "SLV"].include?(fund_name)
-	has_holdings = !["IAU", "SLV"].include?(fund_name)
-
 	if has_holdings
 		downloaded_holdings_csv = wait_for_holdings_download(fund_name)
-		FileUtils.move downloaded_holdings_csv, data_dir
+		FileUtils.move downloaded_holdings_csv, fund_holdings_file
 	end
 
 	if has_distributions
@@ -105,7 +113,7 @@ def crawl_fund(href, data_dir)
 		end
 	end
 
-	File.write("#{data_dir}/#{fund_name}.html", find('body')[:innerHTML])
+	File.write(fund_html_file, find('body')[:innerHTML])
 end
 
 dir = data_dir "ishares", "us", DateTime.now

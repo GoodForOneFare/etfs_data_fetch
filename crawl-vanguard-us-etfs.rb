@@ -59,7 +59,6 @@ Capybara.default_max_wait_time = 3
 
 visit('/VGApp/iip/site/advisor/investments/aggregateviews?productType=product_etf#vt=performanceQuarterNav&pt=product_etf&ac=assetClass_all&ssc=false&sbm=false&acv=true&merge=functionarray2mergeStrtoAddstartIndvararraynewarraytoreturnskipfalseuseforaddingnewrowind20indexforarray2emptyNotSkiptruethisforEachfunctionitemindexifemptyNotSkipitemskipskipifskiparrayindexitemmergeStrarray2ind2ind2elsearrayindexitemiftoAddindexstartIndskipskipreturnarray&balancedSubAssetClassCategorySelectedCat=none&moneyMktSubAssetClassCategorySelectedCat=none&usBondSubAssetClassCategorySelectedCat=none&usStockSubAssetClassCategorySelectedCat=none&benchmarkMgmtCategorySelectedCat=none&assetClassCategorySelectedCat=assetClass_all&productCategorySelectedCat=product_etf')
 
-
 find('[rowposition=fundName] a', match: :first, wait: 10)
 links = all('[rowposition=fundName] a')
 
@@ -81,8 +80,18 @@ def crawl_etf(href, data_dir)
 	end
 
 	ticker_code = find("meta[name=TICKER_SYMBOL]", visible: false)[:content]
+	fund_html_file = File.join(data_dir, "#{ticker_code}.html")
+	fund_holdings_file = File.join(data_dir, "#{ticker_code}.csv")
+
 	puts "Ticker #{ticker_code}"
-	# TODO: save page HTML File.write("#{data_dir}/#{fund_name}.html", find('body')[:innerHTML])
+
+	if (File.exists?(fund_html_file) && File.exists?(fund_holdings_file))
+		puts "\tAlready downloaded."
+		sleep 2 # Don't overload the servers.
+		return
+	end
+
+	File.write(fund_html_file, find('body')[:innerHTML])
 
 	wait_for_vanguard_us_holdings_download(ticker_code)
 
@@ -94,10 +103,8 @@ def crawl_etf(href, data_dir)
 	end
 
 	holdings_path = Dir.glob("#{$downloads_dir}/ProductDetailsHoldings_*.csv")[0]
-	holdings_etf_path = "#{$downloads_dir}/#{ticker_code}.csv"
 
-	File.rename holdings_path, holdings_etf_path
-	FileUtils.move holdings_etf_path, data_dir
+	FileUtils.move holdings_path, fund_holdings_file
 
 	if va_us_has_separate_holdings?(ticker_code)
 		click_link "Price & Distributions"

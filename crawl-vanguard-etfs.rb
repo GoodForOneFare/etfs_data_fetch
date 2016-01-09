@@ -64,14 +64,25 @@ def crawl_etf(href, data_dir)
 	end
 
 	ticker_code = find("li", text: "Ticker symbol").find("span").text()
+	has_holdings = !["IAU", "SLV"].include?(ticker_code)
 	puts "Ticker #{ticker_code}"
-	# TODO: save page HTML File.write("#{data_dir}/#{fund_name}.html", find('body')[:innerHTML])
+
+	fund_html_file = File.join(data_dir, "#{ticker_code}.html")
+	fund_holdings_file = File.join(data_dir, "#{ticker_code}.csv")
+
+	if (File.exists?(fund_html_file) && (has_holdings && File.exists?(fund_holdings_file)))
+		puts "\tAlready downloaded."
+		sleep 2 # Don't overload the servers.
+		return
+	end
+
+	File.write(fund_html_file, find('body')[:innerHTML])
 
 	find('span', text: 'Portfolio data', match: :first).click
 
-	if ticker_code != "VIU" && ticker_code != "VI"
+	if has_holdings
 		holdings_csv = wait_for_vanguard_ca_holdings_download(ticker_code)
-		FileUtils.move holdings_csv, data_dir
+		FileUtils.move holdings_csv, fund_holdings_file
 	end
 
 	find("a", text: "Prices & distributions").click

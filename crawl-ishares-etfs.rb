@@ -74,9 +74,17 @@ end
 
 def crawl_fund(href, data_dir)
 	visit href
-	sleep 3
+#	sleep 3
 
 	ticker_code = find('.identifier').text()
+	fund_html_file = File.join(data_dir, "#{ticker_code}.html")
+	fund_holdings_file = File.join(data_dir, "#{ticker_code}.csv")
+
+	if File.exists?(fund_html_file) && File.exists?(fund_holdings_file)
+		puts "\tAlready downloaded."
+		sleep 2 # Don't overload the servers.
+		return
+	end
 
 	Capybara.current_session.execute_script(%q(
 		$('body').append("<style type='text/css'>.sticky-wrapper { position: static !important }</style>")
@@ -102,9 +110,9 @@ def crawl_fund(href, data_dir)
 		end
 	end
 
-	File.write("#{data_dir}/#{ticker_code}.html", find('body')[:innerHTML])
-	sleep 2
-	FileUtils.move downloaded_holdings_csv, data_dir
+	File.write(fund_html_file, find('body')[:innerHTML])
+	# sleep 2
+	FileUtils.move downloaded_holdings_csv, fund_holdings_file
 end
 
 dir = data_dir "ishares", "ca", DateTime.now
