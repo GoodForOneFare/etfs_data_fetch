@@ -26,11 +26,22 @@ Capybara.default_driver = :selenium
 Capybara.app_host = "https://www.ishares.com"
 Capybara.default_max_wait_time = 3
 
-visit('/us/products/product-list#categoryId=0&lvl2=overview')
+begin
+	visit("/us/products/etf-product-list#!type=ishares&tab=overview&view=list")
 
-find('.colLocalExchangeTicker a', match: :first)
-links = all('.colLocalExchangeTicker a')
-hrefs = links.map do |link| link[:href] end
+	find('a', text: "Find an ETF").hover
+	find(".showAllLinks", visible: true).click
+	find('.colLocalExchangeTicker a', match: :first)
+	links = all('.colLocalExchangeTicker a')
+	hrefs = links.map do |link| link[:href] end
+rescue Exception => e
+	puts "Could not retrieve list of funds."
+	puts e.message
+	puts e.backtrace
+
+	require 'pry'
+	binding.pry
+end
 
 def wait_for_holdings_download(fund_name)
 	# TODO: get user downloads dir.
