@@ -67,8 +67,13 @@ def crawl_etf(href, data_dir)
 	find('span', text: 'Portfolio data', match: :first).click
 
 	if has_holdings
-		holdings_csv = wait_for_vanguard_ca_holdings_download(ticker_code)
-		FileUtils.move holdings_csv, fund_holdings_file
+		find("h3", text: "Holding details")
+		if (all("#noHoldingsData").length == 0)
+			holdings_csv = wait_for_vanguard_ca_holdings_download(ticker_code)
+			FileUtils.move holdings_csv, fund_holdings_file
+		else
+			puts "#{ticker_code} - no holding details found."
+		end
 	end
 
 	find("a", text: "Prices & distributions").click
