@@ -46,11 +46,15 @@ visit('/VGApp/iip/site/advisor/investments/aggregateviews?productType=product_et
 
 find('[rowposition=fundName] a', match: :first, wait: 10)
 links = all('[rowposition=fundName] a')
+ticker_codes = all("[rowposition=symbolCol]")
+raise "Links and ticker code queries returned different lengths: links=#{links.length}, codes=#{ticker_codes.length}" if links.length != ticker_codes.length
 
-hrefs = links.map do |link|
+fund_links = links.each_with_index.map do |link, index|
+	ticker_code = ticker_codes[index].text
+
 	path, etf_id = link[:onclick].match(/jsGoToFundDetails\('(.+?)','(\d+)/)[1..2]
 
-	"#{path}?fundId=#{etf_id}"
+	FundLink.new(ticker_code, "#{path}?fundId=#{etf_id}")
 end
 
 
@@ -106,9 +110,9 @@ FileUtils.mkpath dir
 puts "Saving data to #{dir}."
 
 begin
-	hrefs.each do |href|
-		puts "Crawling #{href}"
-		crawl_etf(href, dir)
+	fund_links.each do |fund|
+		puts "Crawling #{fund.ticker_code}: #{fund.href}"
+		crawl_etf(fund.href, dir)
 	end
 rescue Exception => e
 	puts e.message

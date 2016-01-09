@@ -1,0 +1,1 @@
+FundLink = Struct.new(:ticker_code, :href)

@@ -28,12 +28,20 @@ visit('/individual/portal.htm')
 find("h2", text: "Individual investors").click
 visit "https://www.vanguardcanada.ca/individual/etfs/etfs.htm"
 
-va_ca_all_rows_selector = "*[accordionname=mf-EQUITY] .c-fundName > div > a, *[accordionname=mf-BOND] .c-fundName > div > a"
-find(va_ca_all_rows_selector, match: :first, wait: 30)
-links = all(va_ca_all_rows_selector)
+va_ca_all_hrefs_selector = "*[accordionname=mf-EQUITY] .c-fundName.fixed > div > a, *[accordionname=mf-BOND] .c-fundName.fixed > div > a"
+va_ca_all_ticker_codes_selector = "*[accordionname=mf-EQUITY] .c-fundName.fixed + td, *[accordionname=mf-BOND] .c-fundName.fixed + td"
 
-hrefs = links.map do |link| link[:href].sub(/##/, "#") end
-hrefs.uniq!
+find(va_ca_all_hrefs_selector, match: :first, wait: 30)
+links = all(va_ca_all_hrefs_selector)
+ticker_codes = all(va_ca_all_ticker_codes_selector)
+raise "Links and ticker code queries returned different lengths: links=#{links.length}, codes=#{ticker_codes.length}" if links.length != ticker_codes.length
+
+fund_links = links.each_with_index.map do |link, index|
+	ticker_code = ticker_codes[index].text
+
+	FundLink.new(ticker_code, link[:href].sub(/##/, "#") )
+end
+fund_links.uniq!
 
 def crawl_etf(href, data_dir)
 	visit(href)
@@ -87,9 +95,9 @@ FileUtils.mkpath dir
 puts "Saving data to #{dir}."
 
 begin
-	hrefs.each do |href|
-		puts "Crawling #{href}"
-		crawl_etf(href, dir)
+	fund_links.each do |fund|
+		puts "Crawling #{fund.ticker_code}: #{fund.href}"
+		crawl_etf(fund.href, dir)
 	end
 rescue Exception => e
 	puts e.message

@@ -18,8 +18,10 @@ find('.enter-site a.button').click
 
 find('.colFundName a', match: :first, wait: 20) # Wait for links to load.
 
-links = all('.colFundName a')
-hrefs = links.map do |link| link[:href] end
+links = all('.colTicker a')
+fund_links = links.map do |link|
+	FundLink.new link.text, link[:href]
+end
 
 def wait_for_ishares_ca_holdings_download(ticker_code)
 	sanitized_ticker_code = ticker_code.sub(/\./, "")
@@ -108,10 +110,10 @@ dir = data_dir "ishares", "ca", DateTime.now
 FileUtils.mkpath dir
 puts "Saving data to #{dir}."
 
-hrefs.each do |href|
+fund_links.each do |fund|
 	begin
-		puts "Crawling #{href}"
-		crawl_fund(href, dir)
+		puts "Crawling #{fund.ticker_code}: #{fund.href}"
+		crawl_fund(fund.href, dir)
 	rescue Net::ReadTimeout => e
 		puts "Read timeout #{e}"
 		puts e.backtrace

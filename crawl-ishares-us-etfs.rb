@@ -19,7 +19,10 @@ begin
 	find(".showAllLinks", visible: true).click
 	find('.colLocalExchangeTicker a', match: :first)
 	links = all('.colLocalExchangeTicker a')
-	hrefs = links.map do |link| link[:href] end
+	fund_links = links.map do |link|
+		FundLink.new(link.text, link[:href])
+	end
+
 rescue Exception => e
 	puts "Could not retrieve list of funds."
 	puts e.message
@@ -106,9 +109,10 @@ dir = data_dir "ishares", "us", DateTime.now
 FileUtils.mkpath dir
 puts "Saving data to #{dir}."
 
-hrefs.each do |href|
+fund_links.each do |funk|
 	begin
-		crawl_fund(href, dir)
+		puts "Crawling #{fund.ticker_code}: #{fund.href}"
+		crawl_fund(fund.href, dir)
 	rescue Net::ReadTimeout => e
 		puts "Read timeout #{e}"
 		puts e.backtrace
