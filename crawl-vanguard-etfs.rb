@@ -28,7 +28,7 @@ visit('/individual/portal.htm')
 find("h2", text: "Individual investors").click
 visit "https://www.vanguardcanada.ca/individual/etfs/etfs.htm"
 
-va_ca_all_rows_selector = "*[accordionname=mf-EQUITYaa] .c-fundName > div > a, *[accordionname=mf-BOND] .c-fundName > div > a"
+va_ca_all_rows_selector = "*[accordionname=mf-EQUITY] .c-fundName > div > a, *[accordionname=mf-BOND] .c-fundName > div > a"
 find(va_ca_all_rows_selector, match: :first, wait: 30)
 links = all(va_ca_all_rows_selector)
 
