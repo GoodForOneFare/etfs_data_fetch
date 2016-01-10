@@ -1,5 +1,5 @@
-require 'fileutils'
-require_relative './fund_link'
+require "fileutils"
+require_relative "./fund_link"
 
 # Only tested on Chrome + OS X.
 $downloads_dir = File.expand_path("~/Downloads")

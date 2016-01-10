@@ -1,8 +1,8 @@
-require 'fileutils'
-require_relative 'globals'
-require_relative 'capybara_setup'
-require_relative 'broker'
-require_relative 'pages/vanguard_us_etf_list'
+require "fileutils"
+require_relative "globals"
+require_relative "capybara_setup"
+require_relative "broker"
+require_relative "pages/vanguard_us_etf_list"
 
 begin
     Capybara.app_host = "https://advisors.vanguard.com"
@@ -16,7 +16,7 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end
 
@@ -49,7 +49,7 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
     ticker_code = find("meta[name=TICKER_SYMBOL]", visible: false)[:content]
     raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
 
-    File.write(fund_html_file, find('body')[:innerHTML])
+    File.write(fund_html_file, find("body")[:innerHTML])
 
     holdings_path = wait_for_vanguard_us_holdings_download(ticker_code)
 
@@ -89,6 +89,6 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end

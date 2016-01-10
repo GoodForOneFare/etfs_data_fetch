@@ -1,8 +1,8 @@
-require 'fileutils'
-require_relative 'globals'
-require_relative 'capybara_setup'
-require_relative 'broker'
-require_relative 'pages/ishares_us_etf_list'
+require "fileutils"
+require_relative "globals"
+require_relative "capybara_setup"
+require_relative "broker"
+require_relative "pages/ishares_us_etf_list"
 
 begin
     Capybara.app_host = "https://www.ishares.com"
@@ -16,7 +16,7 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end
 
@@ -41,13 +41,13 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 
     visit href
 
-    ticker_code = find('.identifier').text()
+    ticker_code = find(".identifier").text()
     raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
     has_distributions = Broker.fund_has_distributions?(ticker_code)
     has_holdings = Broker.fund_has_holdings?(ticker_code)
 
     Capybara.current_session.execute_script(%q(
-        $('body').append("<style type='text/css'>.sticky-wrapper, .sticky-footer { position: static !important }</style>")
+        $("body").append("<style type='text/css'>.sticky-wrapper, .sticky-footer { position: static !important }</style>")
     ))
 
     if has_holdings
@@ -64,7 +64,7 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
             find("a", text: "Table", visible: true)
             click_link "Table"
             sleep 1
-            show_all_links = all('.show-all a')
+            show_all_links = all(".show-all a")
             if show_all_links.length > 0
                 show_all_links[0].click
             end
@@ -73,7 +73,7 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
         end
     end
 
-    File.write(fund_html_file, find('body')[:innerHTML])
+    File.write(fund_html_file, find("body")[:innerHTML])
 end
 
 date = DateTime.now
@@ -106,7 +106,7 @@ fund_links.each do |fund|
         puts e.message
         puts e.backtrace
 
-        require 'pry'
+        require "pry"
         binding.pry
     end
 end

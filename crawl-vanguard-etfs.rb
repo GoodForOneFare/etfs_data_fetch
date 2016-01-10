@@ -1,9 +1,9 @@
-require 'fileutils'
-require_relative 'globals'
-require_relative 'capybara_setup'
-require_relative 'broker'
-require_relative 'pages/vanguard_ca_investor_type_selector'
-require_relative 'pages/vanguard_ca_etf_list'
+require "fileutils"
+require_relative "globals"
+require_relative "capybara_setup"
+require_relative "broker"
+require_relative "pages/vanguard_ca_investor_type_selector"
+require_relative "pages/vanguard_ca_etf_list"
 
 begin
     Capybara.app_host = "https://www.vanguardcanada.ca"
@@ -18,7 +18,7 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end
 
@@ -53,9 +53,9 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 
     has_holdings = Broker.fund_has_holdings?(ticker_code)
 
-    File.write(fund_html_file, find('body')[:innerHTML])
+    File.write(fund_html_file, find("body")[:innerHTML])
 
-    find('span', text: 'Portfolio data', match: :first).click
+    find("span", text: "Portfolio data", match: :first).click
 
     if has_holdings
         find("h3", text: "Holding details")
@@ -94,6 +94,6 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end

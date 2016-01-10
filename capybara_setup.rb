@@ -1,6 +1,6 @@
-require 'capybara'
-require 'capybara/dsl'
-require 'capybara/selenium/driver'
+require "capybara"
+require "capybara/dsl"
+require "capybara/selenium/driver"
 
 # This gives a warning about global scope, but that's okay in this small project.
 include Capybara::DSL

@@ -1,9 +1,9 @@
-require 'fileutils'
-require_relative 'globals'
-require_relative 'capybara_setup'
-require_relative 'broker'
-require_relative 'pages/ishares_ca_investor_type_selector'
-require_relative 'pages/ishares_ca_etf_list'
+require "fileutils"
+require_relative "globals"
+require_relative "capybara_setup"
+require_relative "broker"
+require_relative "pages/ishares_ca_investor_type_selector"
+require_relative "pages/ishares_ca_etf_list"
 
 begin
     Capybara.app_host = "http://www.blackrock.com"
@@ -18,7 +18,7 @@ rescue Exception => e
     puts e.message
     puts e.backtrace
 
-    require 'pry'
+    require "pry"
     binding.pry
 end
 
@@ -48,13 +48,13 @@ end
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
     visit href
 
-    ticker_code = find('.identifier').text()
+    ticker_code = find(".identifier").text()
     raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
 
     has_distributions = Broker.fund_has_distributions?(ticker_code)
 
     Capybara.current_session.execute_script(%q(
-        $('body').append("<style type='text/css'>.sticky-wrapper { position: static !important }</style>")
+        $("body").append("<style type='text/css'>.sticky-wrapper { position: static !important }</style>")
     ))
 
     downloaded_holdings_csv = wait_for_ishares_ca_holdings_download(ticker_code)
@@ -68,16 +68,16 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
             find("a", text: "Table", visible: true, wait: 10)
             click_link "Table"
             sleep 1
-            show_all_links = all('.show-all a')
+            show_all_links = all(".show-all a")
             if show_all_links.length > 0
                 show_all_links[0].click
             end
 
-            find('#distroAllTable tbody tr', match: :first, wait: 20) # Wait for rows to load.
+            find("#distroAllTable tbody tr", match: :first, wait: 20) # Wait for rows to load.
         end
     end
 
-    File.write(fund_html_file, find('body')[:innerHTML])
+    File.write(fund_html_file, find("body")[:innerHTML])
     FileUtils.move downloaded_holdings_csv, fund_holdings_file
 end
 
@@ -111,7 +111,7 @@ fund_links.each do |fund|
         puts e.message
         puts e.backtrace
 
-        require 'pry'
+        require "pry"
         binding.pry
     end
 end
