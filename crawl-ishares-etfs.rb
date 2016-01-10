@@ -1,12 +1,3 @@
-# Note: for consistent results, stub out slow-loading external servers in hosts:
-# ```
-# 127.0.0.1 mookie1.com
-# 127.0.0.1 tags.tiqcdn.com
-# 127.0.0.1 metrics.blackrock.com
-# 127.0.0.1 universal.iperceptions.com
-# ```
-# Without adding the above, tests are prone to failing with obscure network timeouts.
-
 require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
@@ -57,9 +48,7 @@ end
 
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 	visit href
-#	sleep 3
 
-	ticker_code = find('.identifier').text()
 	ticker_code = find('.identifier').text()
 	raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
 

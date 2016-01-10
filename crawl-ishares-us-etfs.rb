@@ -1,12 +1,3 @@
-# Note: for consistent results, stub out slow-loading external servers in hosts:
-# ```
-# 127.0.0.1 mookie1.com
-# 127.0.0.1 tags.tiqcdn.com
-# 127.0.0.1 metrics.blackrock.com
-# 127.0.0.1 universal.iperceptions.com
-# ```
-# Without adding the above, tests are prone to failing with obscure network timeouts.
-
 require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
@@ -33,9 +24,8 @@ rescue Exception => e
 	binding.pry
 end
 
-def wait_for_holdings_download(fund_name)
-	# TODO: get user downloads dir.
-	holdings_path = "#{$downloads_dir}/#{fund_name}_holdings.csv"
+def wait_for_holdings_download(ticker_code)
+	holdings_path = "#{$downloads_dir}/#{ticker_code}_holdings.csv"
 	File.delete(holdings_path) if File.exist?(holdings_path)
 
 	# Clicking the link doesn't always launch a download, so attempt this multiple times.
@@ -53,7 +43,7 @@ def wait_for_holdings_download(fund_name)
 		break if File.exist?(holdings_path)
 	end
 
-	raise "Could not download #{fund_name} holdings." if !File.exist?(holdings_path)
+	raise "Could not download #{ticker_code} holdings." if !File.exist?(holdings_path)
 
 	holdings_path
 end
@@ -61,7 +51,6 @@ end
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 
 	visit href
-#	sleep 3
 
 	ticker_code = find('.identifier').text()
 	raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
