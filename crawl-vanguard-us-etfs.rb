@@ -2,6 +2,23 @@ require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
 require_relative 'broker'
+require_relative 'pages/vanguard_us_etf_list'
+
+begin
+    Capybara.app_host = "https://advisors.vanguard.com"
+
+    etfs_page = Vanguard::US::ETFList.new
+    etfs_page.load
+    fund_links = etfs_page.get_fund_links
+
+rescue Exception => e
+    puts "Could not retrieve list of funds."
+    puts e.message
+    puts e.backtrace
+
+    require 'pry'
+    binding.pry
+end
 
 def wait_for_vanguard_us_holdings_download(ticker_code)
     click_link "Portfolio"
@@ -18,24 +35,6 @@ def wait_for_vanguard_us_holdings_download(ticker_code)
 
     downloaded_file_path
 end
-
-
-Capybara.app_host = "https://advisors.vanguard.com"
-visit('/VGApp/iip/site/advisor/investments/aggregateviews?productType=product_etf#vt=performanceQuarterNav&pt=product_etf&ac=assetClass_all&ssc=false&sbm=false&acv=true&merge=functionarray2mergeStrtoAddstartIndvararraynewarraytoreturnskipfalseuseforaddingnewrowind20indexforarray2emptyNotSkiptruethisforEachfunctionitemindexifemptyNotSkipitemskipskipifskiparrayindexitemmergeStrarray2ind2ind2elsearrayindexitemiftoAddindexstartIndskipskipreturnarray&balancedSubAssetClassCategorySelectedCat=none&moneyMktSubAssetClassCategorySelectedCat=none&usBondSubAssetClassCategorySelectedCat=none&usStockSubAssetClassCategorySelectedCat=none&benchmarkMgmtCategorySelectedCat=none&assetClassCategorySelectedCat=assetClass_all&productCategorySelectedCat=product_etf')
-
-find('[rowposition=fundName] a', match: :first, wait: 10)
-links = all('[rowposition=fundName] a')
-ticker_codes = all("[rowposition=symbolCol]")
-raise "Links and ticker code queries returned different lengths: links=#{links.length}, codes=#{ticker_codes.length}" if links.length != ticker_codes.length
-
-fund_links = links.each_with_index.map do |link, index|
-    ticker_code = ticker_codes[index].text
-
-    path, etf_id = link[:onclick].match(/jsGoToFundDetails\('(.+?)','(\d+)/)[1..2]
-
-    FundLink.new(ticker_code, "#{path}?fundId=#{etf_id}")
-end
-
 
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
     visit(href)

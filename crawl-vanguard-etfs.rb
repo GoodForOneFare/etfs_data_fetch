@@ -2,6 +2,25 @@ require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
 require_relative 'broker'
+require_relative 'pages/vanguard_ca_investor_type_selector'
+require_relative 'pages/vanguard_ca_etf_list'
+
+begin
+    Capybara.app_host = "https://www.vanguardcanada.ca"
+
+    selector_page = Vanguard::CA::InvestorTypeSelector.new
+    selector_page.load
+
+    etfs_page = selector_page.go_to_etf_list
+    fund_links = etfs_page.get_fund_links
+rescue Exception => e
+    puts "Could not retrieve list of funds."
+    puts e.message
+    puts e.backtrace
+
+    require 'pry'
+    binding.pry
+end
 
 def wait_for_vanguard_ca_holdings_download(ticker_code)
     using_wait_time(60) do
@@ -14,27 +33,6 @@ def wait_for_vanguard_ca_holdings_download(ticker_code)
 
     downloaded_file_path
 end
-
-Capybara.app_host = "https://www.vanguardcanada.ca"
-visit('/individual/portal.htm')
-
-find("h2", text: "Individual investors").click
-visit "https://www.vanguardcanada.ca/individual/etfs/etfs.htm"
-
-va_ca_all_hrefs_selector = "*[accordionname=mf-EQUITY] .c-fundName.fixed > div > a, *[accordionname=mf-BOND] .c-fundName.fixed > div > a"
-va_ca_all_ticker_codes_selector = "*[accordionname=mf-EQUITY] .c-fundName.fixed + td, *[accordionname=mf-BOND] .c-fundName.fixed + td"
-
-find(va_ca_all_hrefs_selector, match: :first, wait: 30)
-links = all(va_ca_all_hrefs_selector)
-ticker_codes = all(va_ca_all_ticker_codes_selector)
-raise "Links and ticker code queries returned different lengths: links=#{links.length}, codes=#{ticker_codes.length}" if links.length != ticker_codes.length
-
-fund_links = links.each_with_index.map do |link, index|
-    ticker_code = ticker_codes[index].text
-
-    FundLink.new(ticker_code, link[:href].sub(/##/, "#") )
-end
-fund_links.uniq!
 
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
     visit(href)

@@ -2,17 +2,24 @@ require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
 require_relative 'broker'
+require_relative 'pages/ishares_ca_investor_type_selector'
+require_relative 'pages/ishares_ca_etf_list'
 
-Capybara.app_host = "http://www.blackrock.com"
-visit('/ca/individual/en/products/product-list#categoryId=1&lvl2=overview')
-find('a.investor-type-0', visible: true).click
-find('.enter-site a.button').click
+begin
+    Capybara.app_host = "http://www.blackrock.com"
 
-find('.colFundName a', match: :first, wait: 20) # Wait for links to load.
+    selector_page = IShares::CA::InvestorTypeSelector.new
+    selector_page.load
 
-links = all('.colTicker a')
-fund_links = links.map do |link|
-    FundLink.new link.text, link[:href]
+    etfs_page = selector_page.go_to_etf_list
+    fund_links = etfs_page.get_fund_links
+rescue Exception => e
+    puts "Could not retrieve list of funds."
+    puts e.message
+    puts e.backtrace
+
+    require 'pry'
+    binding.pry
 end
 
 def wait_for_ishares_ca_holdings_download(ticker_code)

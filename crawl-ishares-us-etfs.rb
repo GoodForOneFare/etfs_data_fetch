@@ -2,18 +2,14 @@ require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
 require_relative 'broker'
+require_relative 'pages/ishares_us_etf_list'
 
 begin
     Capybara.app_host = "https://www.ishares.com"
-    visit("/us/products/etf-product-list#!type=ishares&tab=overview&view=list")
 
-    find('a', text: "Find an ETF").hover
-    find(".showAllLinks", visible: true).click
-    find('.colLocalExchangeTicker a', match: :first)
-    links = all('.colLocalExchangeTicker a')
-    fund_links = links.map do |link|
-        FundLink.new(link.text, link[:href])
-    end
+    etfs_page = IShares::US::ETFList.new
+    etfs_page.load
+    fund_links = etfs_page.get_fund_links
 
 rescue Exception => e
     puts "Could not retrieve list of funds."
