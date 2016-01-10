@@ -10,6 +10,7 @@
 require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
+require_relative 'broker'
 
 begin
 	Capybara.app_host = "https://www.ishares.com"
@@ -57,30 +58,22 @@ def wait_for_holdings_download(fund_name)
 	holdings_path
 end
 
-def crawl_fund(href, data_dir)
+def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 
 	visit href
 #	sleep 3
 
-	fund_name = find('.identifier').text()
-	has_distributions = !["CMDT", "CSG", "IAU", "SLV"].include?(fund_name)
-	has_holdings = !["IAU", "SLV"].include?(fund_name)
-
-	fund_html_file = File.join(data_dir, "#{fund_name}.html")
-	fund_holdings_file = File.join(data_dir, "#{fund_name}.csv")
-
-	if File.exists?(fund_html_file) && (has_holdings && File.exists?(fund_holdings_file))
-		puts "\tAlready downloaded."
-		sleep 2 # Don't overload the servers.
-		return
-	end
+	ticker_code = find('.identifier').text()
+	raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
+	has_distributions = Broker.fund_has_distributions?(ticker_code)
+	has_holdings = Broker.fund_has_holdings?(ticker_code)
 
 	Capybara.current_session.execute_script(%q(
 		$('body').append("<style type='text/css'>.sticky-wrapper, .sticky-footer { position: static !important }</style>")
 	))
 
 	if has_holdings
-		downloaded_holdings_csv = wait_for_holdings_download(fund_name)
+		downloaded_holdings_csv = wait_for_holdings_download(ticker_code)
 		FileUtils.move downloaded_holdings_csv, fund_holdings_file
 	end
 
@@ -105,14 +98,22 @@ def crawl_fund(href, data_dir)
 	File.write(fund_html_file, find('body')[:innerHTML])
 end
 
-dir = data_dir "ishares", "us", DateTime.now
-FileUtils.mkpath dir
-puts "Saving data to #{dir}."
+date = DateTime.now
 
-fund_links.each do |funk|
+broker = Broker.new("ishares", "us")
+broker.create_data_dir(date)
+
+fund_links.each do |fund|
 	begin
+		if broker.downloaded?(date, fund.ticker_code)
+			puts "Already downloaded #{fund.ticker_code}"
+			next
+		end
+
+		files = broker.fund_files(date, fund.ticker_code)
+
 		puts "Crawling #{fund.ticker_code}: #{fund.href}"
-		crawl_fund(fund.href, dir)
+		crawl_etf(fund.ticker_code, fund.href, files.html, files.holdings_csv)
 	rescue Net::ReadTimeout => e
 		puts "Read timeout #{e}"
 		puts e.backtrace

@@ -1,6 +1,7 @@
 require 'fileutils'
 require_relative 'globals'
 require_relative 'capybara_setup'
+require_relative 'broker'
 
 def wait_for_vanguard_ca_holdings_download(ticker_code)
 	File.delete(*Dir.glob("#{$downloads_dir}/*#{ticker_code}*.csv"))
@@ -43,7 +44,7 @@ fund_links = links.each_with_index.map do |link, index|
 end
 fund_links.uniq!
 
-def crawl_etf(href, data_dir)
+def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 	visit(href)
 
 	page_loaded_text = if href.include?("=BOND") then
@@ -58,17 +59,9 @@ def crawl_etf(href, data_dir)
 	end
 
 	ticker_code = find("li", text: "Ticker symbol").find("span").text()
-	has_holdings = !["IAU", "SLV"].include?(ticker_code)
-	puts "Ticker #{ticker_code}"
+	raise "Ticker codes do not match #{expected_ticker_code} != #{ticker_code}" if expected_ticker_code != ticker_code
 
-	fund_html_file = File.join(data_dir, "#{ticker_code}.html")
-	fund_holdings_file = File.join(data_dir, "#{ticker_code}.csv")
-
-	if (File.exists?(fund_html_file) && (has_holdings && File.exists?(fund_holdings_file)))
-		puts "\tAlready downloaded."
-		sleep 2 # Don't overload the servers.
-		return
-	end
+	has_holdings = Broker.fund_has_holdings?(ticker_code)
 
 	File.write(fund_html_file, find('body')[:innerHTML])
 
@@ -90,14 +83,22 @@ def crawl_etf(href, data_dir)
 	# TODO: save distribution history
 end
 
-dir = data_dir "vanguard", "ca", DateTime.now
-FileUtils.mkpath dir
-puts "Saving data to #{dir}."
+date = DateTime.now
+
+broker = Broker.new("vanguard", "ca")
+broker.create_data_dir(date)
 
 begin
 	fund_links.each do |fund|
+		if broker.downloaded?(date, fund.ticker_code)
+			puts "Already downloaded #{fund.ticker_code}"
+			next
+		end
+
+		files = broker.fund_files(date, fund.ticker_code)
+
 		puts "Crawling #{fund.ticker_code}: #{fund.href}"
-		crawl_etf(fund.href, dir)
+		crawl_etf(fund.ticker_code, fund.href, files.html, files.holdings_csv)
 	end
 rescue Exception => e
 	puts e.message
