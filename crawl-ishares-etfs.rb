@@ -18,32 +18,24 @@ end
 def wait_for_ishares_ca_holdings_download(ticker_code)
     sanitized_ticker_code = ticker_code.sub(/\./, "")
 
-    # Glob here because Chrome sometimes appends a numerical suffix (e.g., ` (1)`to the downloaded filename,
-    # so there's no canonical path to expect
-    csv_glob = "#{$downloads_dir}/#{sanitized_ticker_code}*_holdings*.csv"
+    # Glob includes `*.csv` because Chrome sometimes appends a numerical suffix (e.g., `XUU_holdings (1).csv`)
+    # to the downloaded filename, so there's no canonical path to expect.
+    file_glob = "#{sanitized_ticker_code}*_holdings*.csv"
 
-    csv_files = nil
+    downloaded_file_path = nil
 
     # Clicking the link doesn't always launch a download, so attempt this multiple times.
     (1..10).each do |loop_count|
-        File.delete(*Dir.glob(csv_glob))
-
         click_link "Download Holdings"
 
-        # Wait for the file to appear.
-        (1..10).each do |check_count|
-            sleep(0.5)
-            csv_files = Dir.glob(csv_glob)
+        downloaded_file_path = wait_for_download(file_glob)
 
-            break if csv_files && csv_files.length >= 1
-        end
-
-        break if csv_files && csv_files.length >= 1
+        break if downloaded_file_path
     end
 
-    raise "Could not download #{ticker_code} holdings." if !csv_files || csv_files.length == 0
+    raise "Could not download #{ticker_code} holdings." if !downloaded_file_path
 
-    csv_files[0]
+    downloaded_file_path
 end
 
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)

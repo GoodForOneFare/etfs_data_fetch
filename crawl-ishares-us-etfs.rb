@@ -25,27 +25,20 @@ rescue Exception => e
 end
 
 def wait_for_holdings_download(ticker_code)
-    holdings_path = "#{$downloads_dir}/#{ticker_code}_holdings.csv"
-    File.delete(holdings_path) if File.exist?(holdings_path)
+    downloaded_file_path = nil
 
     # Clicking the link doesn't always launch a download, so attempt this multiple times.
     (1..10).each do |loop_count|
-        p "Loop #{loop_count}"
         click_link "Detailed Holdings and Analytics"
 
-        # Wait for the file to appear.
-        (1..10).each do |check_count|
-            p "\tCheck #{check_count}"
-            sleep(0.5)
-            break if File.exist?(holdings_path)
-        end
+        downloaded_file_path = wait_for_download("#{ticker_code}_holdings.csv")
 
-        break if File.exist?(holdings_path)
+        break if downloaded_file_path
     end
 
-    raise "Could not download #{ticker_code} holdings." if !File.exist?(holdings_path)
+    raise "Could not download #{ticker_code} holdings." if !downloaded_file_path
 
-    holdings_path
+    downloaded_file_path
 end
 
 def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)

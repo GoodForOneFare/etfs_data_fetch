@@ -8,8 +8,6 @@ def va_us_has_separate_holdings?(ticker_code)
 end
 
 def wait_for_vanguard_us_holdings_download(ticker_code)
-    File.delete(*Dir.glob("#{$downloads_dir}/ProductDetailsHoldings_*.csv"))
-
     if (va_us_has_separate_holdings?(ticker_code))
         click_link "Portfolio"
         find("#composition")
@@ -27,18 +25,11 @@ def wait_for_vanguard_us_holdings_download(ticker_code)
         retry
     end
 
-    csv_files = []
-    # Wait for the file to appear.
-    (1..50).each do |check_count|
-        p "\tCheck #{check_count}"
-        sleep(0.5)
-        csv_files = Dir.glob("#{$downloads_dir}/ProductDetailsHoldings_*.csv")
-        break if csv_files && csv_files.length == 1
-    end
+    downloaded_file_path = wait_for_download("ProductDetailsHoldings_*.csv")
 
-    raise "Could not download #{ticker_code} holdings." if !csv_files || csv_files.length != 1
+    raise "Could not download #{ticker_code} holdings." if !downloaded_file_path
 
-    csv_files[0]
+    downloaded_file_path
 end
 
 

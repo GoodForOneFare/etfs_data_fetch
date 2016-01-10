@@ -4,23 +4,15 @@ require_relative 'capybara_setup'
 require_relative 'broker'
 
 def wait_for_vanguard_ca_holdings_download(ticker_code)
-    File.delete(*Dir.glob("#{$downloads_dir}/*#{ticker_code}*.csv"))
-
     using_wait_time(60) do
         find("a", text: "Export to spreadsheet").click
     end
 
-    csv_files = []
-    # Wait for the file to appear.
-    (1..50).each do |check_count|
-        sleep(0.5)
-        csv_files = Dir.glob("#{$downloads_dir}/*#{ticker_code}*.csv")
-        break if csv_files && csv_files.length == 1
-    end
+    downloaded_file_path = wait_for_download("*#{ticker_code}*.csv")
 
-    raise "Could not download #{ticker_code} holdings." if !csv_files || csv_files.length != 1
+    raise "Could not download #{ticker_code} holdings." if !downloaded_file_path
 
-    csv_files[0]
+    downloaded_file_path
 end
 
 Capybara.app_host = "https://www.vanguardcanada.ca"
