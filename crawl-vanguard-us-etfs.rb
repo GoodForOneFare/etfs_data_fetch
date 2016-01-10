@@ -3,26 +3,13 @@ require_relative 'globals'
 require_relative 'capybara_setup'
 require_relative 'broker'
 
-def va_us_has_separate_holdings?(ticker_code)
-    ["BIV", "BLV", "EDV", "VGIT", "VGLT", "VMBS"].include?(ticker_code)
-end
-
 def wait_for_vanguard_us_holdings_download(ticker_code)
-    if (va_us_has_separate_holdings?(ticker_code))
-        click_link "Portfolio"
-        find("#composition")
-    end
+    click_link "Portfolio"
+    click_link("Holding details")
+    find("#composition")
 
-    begin
-        click_link("Holding details")
-        using_wait_time(60) do
-            click_link "Export data"
-        end
-    rescue
-        puts "#{ticker_code} holdings not found; trying individual holdings page"
-        click_link "Portfolio"
-        find("#composition")
-        retry
+    using_wait_time(10) do
+        click_link "Export data"
     end
 
     downloaded_file_path = wait_for_download("ProductDetailsHoldings_*.csv")
@@ -65,24 +52,18 @@ def crawl_etf(expected_ticker_code, href, fund_html_file, fund_holdings_file)
 
     File.write(fund_html_file, find('body')[:innerHTML])
 
-    wait_for_vanguard_us_holdings_download(ticker_code)
+    holdings_path = wait_for_vanguard_us_holdings_download(ticker_code)
 
-    if va_us_has_separate_holdings?(ticker_code)
-        click_link "Overview"
-        using_wait_time(60) do
-            find("a", text: page_loaded_text, match: :first)
-        end
+    click_link "Overview"
+    using_wait_time(20) do
+        find("a", text: page_loaded_text, match: :first)
     end
-
-    holdings_path = Dir.glob("#{$downloads_dir}/ProductDetailsHoldings_*.csv")[0]
 
     FileUtils.move holdings_path, fund_holdings_file
 
-    if va_us_has_separate_holdings?(ticker_code)
-        click_link "Price & Distributions"
-        using_wait_time(30) do
-            find("[id='priceForm:priceDistributionsTable'] .subDataTable tbody tr", match: :first)
-        end
+    click_link "Price & Distributions"
+    using_wait_time(30) do
+        find("[id='priceForm:priceDistributionsTable'] .subDataTable tbody tr", match: :first)
     end
 
     # TODO: save distribution history
